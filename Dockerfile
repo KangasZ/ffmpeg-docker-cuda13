@@ -19,7 +19,7 @@
 # $ docker push xychelsea/ffmpeg-nvidia:latest
 
 # Stage 1: Builder - Compile FFmpeg from source
-FROM nvidia/cuda:12.5.1-devel-ubuntu22.04 AS builder
+FROM nvidia/cuda:13.1.1-devel-ubuntu22.04 AS builder
 
 ARG FFMPEG_VERSION="8.0"
 ENV FFMPEG_VERSION="${FFMPEG_VERSION}"
@@ -170,7 +170,6 @@ RUN ./configure \
     --enable-libjack \
     --enable-libmp3lame \
     --enable-libmysofa \
-    --enable-libnpp \
     --enable-libopenjpeg \
     --enable-libopenmpt \
     --enable-libopus \
@@ -206,7 +205,7 @@ RUN ./configure \
     make install
 
 # Stage 2: Runtime - Minimal image with only FFmpeg binaries
-FROM nvidia/cuda:12.5.1-base-ubuntu22.04
+FROM nvidia/cuda:13.1.1-base-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/local/ffmpeg-nvidia/bin:${PATH}"
@@ -299,7 +298,8 @@ RUN apt-get update --fix-missing && \
 COPY --from=builder /usr/local/ffmpeg-nvidia /usr/local/ffmpeg-nvidia
 
 # Copy required CUDA NPP libraries from builder (needed for --enable-libnpp)
-COPY --from=builder /usr/local/cuda/lib64/libnpp*.so* /usr/local/cuda/lib64/
+# NPP no longer supported in CUDA 13, So don't copy this
+# COPY --from=builder /usr/local/cuda/lib64/libnpp*.so* /usr/local/cuda/lib64/
 
 # Update library cache
 RUN ldconfig
